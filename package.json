@@ -1,0 +1,30 @@
+{
+  "name": "asys",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build -w @asys/contracts && npm run build -w @asys/api && npm run build -w @asys/web && npm run build -w @asys/worker",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "playwright test --config=e2e/playwright.config.ts",
+    "nfr:check": "node --import tsx scripts/nfr-check.ts",
+    "nfr:check:scale": "node --import tsx scripts/nfr-check-scale.ts",
+    "db:migrate": "npm run db:migrate -w @asys/api",
+    "db:seed": "npm run db:seed -w @asys/api"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^22.11.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.3"
+  }
+}

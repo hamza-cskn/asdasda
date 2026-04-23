@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  RESIDENT
+  SECURITY
+}
+
+enum DueStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  BANK_TRANSFER
+}
+
+enum MaintenanceStatus {
+  BEKLEMEDE
+  ISLEMDE
+  TAMAMLANDI
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum CommonAreaType {
+  GYM
+  MEETING_ROOM
+  CHILD_PARK
+}
+
+enum ParkingSpotType {
+  STANDARD
+  ACCESSIBLE
+  VISITOR
+}
+
+enum NotificationCategory {
+  PASSWORD_RESET
+  ANNOUNCEMENT_PUBLISHED
+  MAINTENANCE_REQUEST_CREATED
+  MAINTENANCE_STATUS_UPDATED
+  MAINTENANCE_ESCALATED_7D
+  DUE_OVERDUE
+  DUE_DEBTOR_3_MONTHS
+  PAYMENT_RECEIVED
+  RESERVATION_CREATED
+  RESERVATION_CANCELLED
+  VISITOR_OVERSTAY
+  SYSTEM_BACKUP
+}
+
+model User {
+  id                        String               @id @default(cuid()) @map("user_id")
+  name                      String
+  email                     String               @unique
+  passwordHash              String               @map("password_hash")
+  role                      Role
+  phone                     String?
+  isActive                  Boolean              @default(true) @map("is_active")
+  deactivatedAt             DateTime?            @map("deactivated_at")
+  failedLoginAttempts       Int                  @default(0) @map("failed_login_attempts")
+  lockedUntil               DateTime?            @map("locked_until")
+  apartmentId               String?              @unique @map("apartment_id")
+  apartment                 Apartment?           @relation("ApartmentResident", fields: [apartmentId], references: [id])
+  maintenanceRequests       MaintenanceRequest[] @relation("MaintenanceResident")
+  announcements             Announcement[]       @relation("AnnouncementAuthor")
+  reservations              Reservation[]        @relation("ReservationResident")
+  registeredVisitorVehicles VisitorVehicle[]     @relation("SecurityRegistrant")
+  createdPayments           Payment[]            @relation("PaymentCreator")
+  passwordResetTokens       PasswordResetToken[]
+  notifications             Notification[]
+  auditLogs                 AuditLog[]
+  createdAt                 DateTime             @default(now()) @map("created_at")
+  updatedAt                 DateTime             @updatedAt @map("updated_at")
+
+  @@index([isActive, deactivatedAt], map: "users_is_active_deactivated_at_idx")
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid()) @map("password_reset_token_id")
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model EmailOutbox {
+  id        String   @id @default(cuid()) @map("email_outbox_id")
+  toEmail   String   @map("to_email")
+  subject   String
+  body      String
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("email_outbox")
+}
+
+model Notification {
+  id        String               @id @default(cuid()) @map("notification_id")
+  userId    String               @map("user_id")
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  category  NotificationCategory
+  link      String?
+  isRead    Boolean              @default(false) @map("is_read")
+  createdAt DateTime             @default(now()) @map("created_at")
+
+  @@index([userId, isRead, createdAt], map: "notifications_user_is_read_created_at_idx")
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid()) @map("audit_log_id")
+  userId     String?  @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([action, createdAt], map: "audit_logs_action_created_at_idx")
+  @@index([entityType, entityId], map: "audit_logs_entity_type_entity_id_idx")
+  @@map("audit_logs")
+}
+
+model Apartment {
+  id              String          @id @default(cuid()) @map("apartment_id")
+  block           String
+  floor           Int
+  number          String
+  monthlyDue      Decimal         @db.Decimal(10, 2) @default(0) @map("monthly_due")
+  isOccupied      Boolean         @default(false) @map("is_occupied")
+  resident        User?           @relation("ApartmentResident")
+  dues            Due[]
+  parkingSpots    ParkingSpot[]
+  visitorVehicles VisitorVehicle[]
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@unique([block, number], map: "apartments_block_number_key")
+  @@map("apartments")
+}
+
+model Due {
+  id            String    @id @default(cuid()) @map("due_id")
+  apartmentId   String    @map("apartment_id")
+  apartment     Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  amount        Decimal   @db.Decimal(10, 2)
+  dueDate       DateTime  @map("due_date")
+  status        DueStatus @default(PENDING)
+  lateFeeAmount Decimal   @db.Decimal(10, 2) @default(0) @map("late_fee_amount")
+  payments      Payment[]
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([apartmentId, dueDate], map: "dues_apartment_id_due_date_key")
+  @@index([status, dueDate], map: "dues_status_due_date_idx")
+  @@map("dues")
+}
+
+model Payment {
+  id          String        @id @default(cuid()) @map("payment_id")
+  dueId       String        @map("due_id")
+  due         Due           @relation(fields: [dueId], references: [id], onDelete: Cascade)
+  amount      Decimal       @db.Decimal(10, 2)
+  method      PaymentMethod
+  paidAt      DateTime      @default(now()) @map("paid_at")
+  createdById String?       @map("created_by_id")
+  createdBy   User?         @relation("PaymentCreator", fields: [createdById], references: [id])
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@index([paidAt], map: "payments_paid_at_idx")
+  @@map("payments")
+}
+
+model MaintenanceRequest {
+  id           String            @id @default(cuid()) @map("request_id")
+  residentId   String            @map("resident_id")
+  resident     User              @relation("MaintenanceResident", fields: [residentId], references: [id], onDelete: Cascade)
+  category     String
+  description  String
+  photoUrl     String?           @map("photo_url")
+  status       MaintenanceStatus @default(BEKLEMEDE)
+  rating       Int?
+  responseDueAt DateTime?        @map("response_due_at")
+  respondedAt  DateTime?         @map("responded_at")
+  escalatedAt  DateTime?         @map("escalated_at")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  @@index([status, createdAt], map: "maintenance_requests_status_created_at_idx")
+  @@map("maintenance_requests")
+}
+
+model Announcement {
+  id          String   @id @default(cuid()) @map("announcement_id")
+  title       String
+  content     String
+  publishedAt DateTime @default(now()) @map("published_at")
+  authorId    String?  @map("author_id")
+  author      User?    @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("announcements")
+}
+
+model CommonArea {
+  id               String         @id @default(cuid()) @map("common_area_id")
+  type             CommonAreaType
+  name             String         @unique
+  description      String?
+  maxDurationHours Int            @default(2) @map("max_duration_hours")
+  dailyLimitHours  Int            @default(2) @map("daily_limit_hours")
+  opensAt          String         @default("07:00") @map("opens_at")
+  closesAt         String         @default("23:00") @map("closes_at")
+  reservations     Reservation[]
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@map("common_areas")
+}
+
+model Reservation {
+  id           String            @id @default(cuid()) @map("reservation_id")
+  commonAreaId String            @map("common_area_id")
+  commonArea   CommonArea        @relation(fields: [commonAreaId], references: [id], onDelete: Cascade)
+  residentId   String            @map("resident_id")
+  resident     User              @relation("ReservationResident", fields: [residentId], references: [id], onDelete: Cascade)
+  startsAt     DateTime          @map("starts_at")
+  endsAt       DateTime          @map("ends_at")
+  status       ReservationStatus @default(ACTIVE)
+  cancelledAt  DateTime?         @map("cancelled_at")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  @@index([commonAreaId, startsAt, endsAt], map: "reservations_area_time_idx")
+  @@index([residentId, startsAt], map: "reservations_resident_time_idx")
+  @@map("reservations")
+}
+
+model ParkingSpot {
+  id              String           @id @default(cuid()) @map("parking_spot_id")
+  spotNumber      String           @unique @map("spot_number")
+  type            ParkingSpotType  @default(STANDARD)
+  apartmentId     String?          @map("apartment_id")
+  apartment       Apartment?       @relation(fields: [apartmentId], references: [id])
+  visitorVehicles VisitorVehicle[]
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  @@index([type, apartmentId], map: "parking_spots_type_apartment_id_idx")
+  @@map("parking_spots")
+}
+
+model VisitorVehicle {
+  id             String      @id @default(cuid()) @map("visitor_vehicle_id")
+  plate          String
+  apartmentId    String      @map("apartment_id")
+  apartment      Apartment   @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  parkingSpotId  String      @map("parking_spot_id")
+  parkingSpot    ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
+  registeredById String?     @map("registered_by_id")
+  registeredBy   User?       @relation("SecurityRegistrant", fields: [registeredById], references: [id])
+  enteredAt      DateTime    @default(now()) @map("entered_at")
+  exitedAt       DateTime?   @map("exited_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  @@index([enteredAt, exitedAt], map: "visitor_vehicles_entered_at_exited_at_idx")
+  @@map("visitor_vehicles")
+}

@@ -1,0 +1,1061 @@
+{
+  "project": "ASYS",
+  "source": "CodeForge_Proje1.pdf",
+  "notes": [
+    "This matrix maps every requirement ID to the minimum code and test evidence expected in the generated target repository.",
+    "The PDF contains business rules IK-01 through IK-17; IK-15 through IK-17 are included here even though earlier shorthand stopped at IK-14.",
+    "Slice values indicate the primary implementation slice that should land the requirement, not the only slice that may touch it."
+  ],
+  "requirements": [
+    {
+      "id": "FR-01",
+      "type": "functional",
+      "slice": "S2",
+      "module": "auth",
+      "summary": "Email/password login",
+      "expected_code_evidence": [
+        "API login endpoint with email/password validation and active-user checks",
+        "Web login page and form flow with Turkish error handling"
+      ],
+      "expected_test_evidence": [
+        "API integration test for valid and invalid login",
+        "Playwright login smoke for at least one role"
+      ]
+    },
+    {
+      "id": "FR-02",
+      "type": "functional",
+      "slice": "S2",
+      "module": "auth",
+      "summary": "Issue JWT on successful login",
+      "expected_code_evidence": [
+        "JWT generation service and signed token response payload",
+        "Client auth state that stores and forwards the token"
+      ],
+      "expected_test_evidence": [
+        "Auth test that asserts token issuance on successful login",
+        "Protected-route or protected-endpoint test using issued token"
+      ]
+    },
+    {
+      "id": "FR-03",
+      "type": "functional",
+      "slice": "S2",
+      "module": "auth",
+      "summary": "JWT expires after 24 hours",
+      "expected_code_evidence": [
+        "JWT config set to 24-hour expiry",
+        "Auth middleware that rejects expired or invalid tokens"
+      ],
+      "expected_test_evidence": [
+        "Token-expiry unit or integration test",
+        "Protected-endpoint denial test for expired token"
+      ]
+    },
+    {
+      "id": "FR-04",
+      "type": "functional",
+      "slice": "S2",
+      "module": "auth-rbac",
+      "summary": "Exactly one role per user with role-based page blocking",
+      "expected_code_evidence": [
+        "Single-role user model and RBAC middleware/route guards",
+        "Role-aware web routing for admin, resident, and security areas"
+      ],
+      "expected_test_evidence": [
+        "RBAC API denial tests across roles",
+        "UI route-guard tests or Playwright role-denial checks"
+      ]
+    },
+    {
+      "id": "FR-05",
+      "type": "functional",
+      "slice": "S2",
+      "module": "auth",
+      "summary": "Store passwords with bcrypt",
+      "expected_code_evidence": [
+        "Password hashing utility using bcrypt",
+        "User creation and reset flows that persist only password hashes"
+      ],
+      "expected_test_evidence": [
+        "Unit test that verifies bcrypt hash generation and comparison",
+        "Integration test that confirms plaintext passwords are not stored"
+      ]
+    },
+    {
+      "id": "FR-06",
+      "type": "functional",
+      "slice": "S2",
+      "module": "auth",
+      "summary": "Forgot-password flow via email delivery",
+      "expected_code_evidence": [
+        "Forgot-password request and reset endpoints with token lifecycle",
+        "Demo-safe email or outbox adapter for password reset delivery"
+      ],
+      "expected_test_evidence": [
+        "Integration test for forgot-password token generation and reset completion",
+        "Outbox or mock-delivery test that captures reset message"
+      ]
+    },
+    {
+      "id": "FR-07",
+      "type": "functional",
+      "slice": "S3",
+      "module": "user-management",
+      "summary": "Admin can activate or deactivate accounts",
+      "expected_code_evidence": [
+        "Admin-only user-management endpoint or screen to toggle account state",
+        "Auth flow that blocks inactive users"
+      ],
+      "expected_test_evidence": [
+        "Admin management test for activation and deactivation",
+        "Login denial test for inactive accounts"
+      ]
+    },
+    {
+      "id": "FR-08",
+      "type": "functional",
+      "slice": "S4",
+      "module": "dues",
+      "summary": "Auto-create monthly dues records per apartment",
+      "expected_code_evidence": [
+        "Dues generation service or worker job tied to apartments",
+        "Schema and seed support for recurring monthly dues"
+      ],
+      "expected_test_evidence": [
+        "Worker or service test for monthly dues generation",
+        "Integration test that new monthly dues appear for apartments"
+      ]
+    },
+    {
+      "id": "FR-09",
+      "type": "functional",
+      "slice": "S4",
+      "module": "payments",
+      "summary": "Resident can pay by bank transfer or credit card",
+      "expected_code_evidence": [
+        "Payment endpoints and UI with selectable credit-card and bank-transfer methods",
+        "Demo-safe payment adapter that simulates approval results"
+      ],
+      "expected_test_evidence": [
+        "Integration test for both payment methods",
+        "Resident payment Playwright flow"
+      ]
+    },
+    {
+      "id": "FR-10",
+      "type": "functional",
+      "slice": "S4",
+      "module": "payments",
+      "summary": "Store payment date, amount, and method",
+      "expected_code_evidence": [
+        "Payment persistence model with timestamp, amount, and method fields",
+        "Receipt or history serialization that returns stored metadata"
+      ],
+      "expected_test_evidence": [
+        "Database integration test that asserts payment metadata persistence",
+        "History or receipt test that shows stored fields"
+      ]
+    },
+    {
+      "id": "FR-11",
+      "type": "functional",
+      "slice": "S4",
+      "module": "dues-notifications",
+      "summary": "Send email and in-app notice for overdue dues",
+      "expected_code_evidence": [
+        "Overdue reminder job and notification creation logic",
+        "Demo-safe email adapter plus resident notification feed wiring"
+      ],
+      "expected_test_evidence": [
+        "Job test for overdue reminder creation",
+        "Integration test that overdue dues create outbox and in-app notices"
+      ]
+    },
+    {
+      "id": "FR-12",
+      "type": "functional",
+      "slice": "S4",
+      "module": "dues",
+      "summary": "Auto-calculate 2% monthly late fee",
+      "expected_code_evidence": [
+        "Late-fee calculation logic applied to overdue dues",
+        "Stored balance or due-total model that includes late fee state"
+      ],
+      "expected_test_evidence": [
+        "Unit test for 2% late-fee calculation",
+        "Integration test that overdue due totals include late fee"
+      ]
+    },
+    {
+      "id": "FR-13",
+      "type": "functional",
+      "slice": "S4",
+      "module": "dues-admin",
+      "summary": "Admin can list payment status for all apartments",
+      "expected_code_evidence": [
+        "Admin payment-status listing endpoint with apartment context",
+        "Admin web view for dues and payment states"
+      ],
+      "expected_test_evidence": [
+        "Integration test for admin payment-status listing",
+        "Admin UI test covering filter or table render"
+      ]
+    },
+    {
+      "id": "FR-14",
+      "type": "functional",
+      "slice": "S4",
+      "module": "payments",
+      "summary": "Resident can filter own payment history",
+      "expected_code_evidence": [
+        "Resident payment-history query with filtering options",
+        "Web payment-history screen with filter controls"
+      ],
+      "expected_test_evidence": [
+        "API test for resident-scoped payment-history filtering",
+        "Resident UI or Playwright test for filter behavior"
+      ]
+    },
+    {
+      "id": "FR-15",
+      "type": "functional",
+      "slice": "S5",
+      "module": "maintenance",
+      "summary": "Resident creates maintenance request with category, description, and photo",
+      "expected_code_evidence": [
+        "Maintenance create endpoint supporting category, description, and photo upload metadata",
+        "Resident maintenance-request form with category and attachment support"
+      ],
+      "expected_test_evidence": [
+        "Integration test for maintenance request creation with attachment",
+        "Resident UI or Playwright flow for opening a request"
+      ]
+    },
+    {
+      "id": "FR-16",
+      "type": "functional",
+      "slice": "S5",
+      "module": "maintenance-notifications",
+      "summary": "Notify admin immediately on new maintenance request",
+      "expected_code_evidence": [
+        "Immediate admin notification creation on request submit",
+        "Notification feed or outbox integration for maintenance events"
+      ],
+      "expected_test_evidence": [
+        "Integration test that new request creates admin notification",
+        "Notification feed test for admin visibility"
+      ]
+    },
+    {
+      "id": "FR-17",
+      "type": "functional",
+      "slice": "S5",
+      "module": "maintenance",
+      "summary": "Admin updates maintenance status",
+      "expected_code_evidence": [
+        "Admin maintenance status update endpoint limited to allowed states",
+        "Admin maintenance UI for status transitions"
+      ],
+      "expected_test_evidence": [
+        "Integration test for valid and invalid status transitions",
+        "Admin UI test for changing maintenance status"
+      ]
+    },
+    {
+      "id": "FR-18",
+      "type": "functional",
+      "slice": "S5",
+      "module": "maintenance-notifications",
+      "summary": "Resident notified on maintenance status change",
+      "expected_code_evidence": [
+        "Resident notification event emitted on maintenance status change",
+        "Resident notification feed or request timeline entry"
+      ],
+      "expected_test_evidence": [
+        "Integration test for resident status-change notification",
+        "Resident feed or timeline test covering update visibility"
+      ]
+    },
+    {
+      "id": "FR-19",
+      "type": "functional",
+      "slice": "S5",
+      "module": "maintenance",
+      "summary": "Resident can rate completed request from 1 to 5 stars",
+      "expected_code_evidence": [
+        "Rating field or relation limited to completed requests",
+        "Resident rating UI on completed maintenance items"
+      ],
+      "expected_test_evidence": [
+        "Integration test that only completed requests accept ratings",
+        "Resident UI test for 1-to-5 rating submission"
+      ]
+    },
+    {
+      "id": "FR-20",
+      "type": "functional",
+      "slice": "S5",
+      "module": "maintenance-admin",
+      "summary": "Admin filters maintenance history by date and category",
+      "expected_code_evidence": [
+        "Maintenance history query with date-range and category filters",
+        "Admin maintenance list view with filter controls"
+      ],
+      "expected_test_evidence": [
+        "API test for maintenance filter combinations",
+        "Admin UI test for category or date filtering"
+      ]
+    },
+    {
+      "id": "FR-21",
+      "type": "functional",
+      "slice": "S6",
+      "module": "announcements",
+      "summary": "Admin publishes announcement with title and content",
+      "expected_code_evidence": [
+        "Announcement create endpoint with title and content validation",
+        "Admin announcement compose screen"
+      ],
+      "expected_test_evidence": [
+        "Integration test for announcement creation",
+        "Admin UI or Playwright flow for publish action"
+      ]
+    },
+    {
+      "id": "FR-22",
+      "type": "functional",
+      "slice": "S6",
+      "module": "announcements-notifications",
+      "summary": "Published announcement notifies all residents",
+      "expected_code_evidence": [
+        "Announcement publish hook that fans out resident notifications",
+        "Resident notification feed entry for announcement delivery"
+      ],
+      "expected_test_evidence": [
+        "Integration test that publish creates notifications for residents",
+        "Resident feed or e2e check showing new announcement notification"
+      ]
+    },
+    {
+      "id": "FR-23",
+      "type": "functional",
+      "slice": "S6",
+      "module": "announcements",
+      "summary": "Residents view historical announcements in date order",
+      "expected_code_evidence": [
+        "Resident announcement listing sorted by publish date",
+        "Resident announcement page or feed view"
+      ],
+      "expected_test_evidence": [
+        "API test for resident announcement ordering",
+        "UI test for announcement history render order"
+      ]
+    },
+    {
+      "id": "FR-24",
+      "type": "functional",
+      "slice": "S6",
+      "module": "announcements",
+      "summary": "Admin edits or deletes announcements",
+      "expected_code_evidence": [
+        "Admin edit and delete endpoints or commands for announcements",
+        "Admin announcement management UI"
+      ],
+      "expected_test_evidence": [
+        "Integration test for edit and delete behavior",
+        "Admin UI test for announcement management actions"
+      ]
+    },
+    {
+      "id": "FR-25",
+      "type": "functional",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Support reservations for gym, meeting room, and child park",
+      "expected_code_evidence": [
+        "Seeded common-area definitions for gym, meeting room, and child park",
+        "Reservation APIs and UI targeting supported common-area types"
+      ],
+      "expected_test_evidence": [
+        "Integration test for supported area reservation creation",
+        "Resident reservation UI flow across available area types"
+      ]
+    },
+    {
+      "id": "FR-26",
+      "type": "functional",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Resident selects reservation time via calendar view",
+      "expected_code_evidence": [
+        "Calendar or slot-based reservation UI",
+        "Backend slot query or availability computation for area schedules"
+      ],
+      "expected_test_evidence": [
+        "UI test for slot selection and submission",
+        "Playwright resident reservation journey using calendar flow"
+      ]
+    },
+    {
+      "id": "FR-27",
+      "type": "functional",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Prevent overlapping reservations for same area and time",
+      "expected_code_evidence": [
+        "Reservation conflict detection in service or database constraint layer",
+        "User-facing conflict error handling"
+      ],
+      "expected_test_evidence": [
+        "Integration test that overlapping reservation is rejected",
+        "UI test for visible conflict message"
+      ]
+    },
+    {
+      "id": "FR-28",
+      "type": "functional",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Resident can cancel if at least 2 hours before event",
+      "expected_code_evidence": [
+        "Cancellation policy logic enforcing 2-hour minimum window",
+        "Resident reservation management UI with cancel action state"
+      ],
+      "expected_test_evidence": [
+        "Integration test for allowed and blocked cancellation windows",
+        "Resident UI test for cancel availability"
+      ]
+    },
+    {
+      "id": "FR-29",
+      "type": "functional",
+      "slice": "S7",
+      "module": "reservations-admin",
+      "summary": "Admin can view and cancel reservations",
+      "expected_code_evidence": [
+        "Admin reservation listing and cancellation endpoint",
+        "Admin reservation management screen"
+      ],
+      "expected_test_evidence": [
+        "Integration test for admin reservation cancellation",
+        "Admin UI test for reservation list and cancel action"
+      ]
+    },
+    {
+      "id": "FR-30",
+      "type": "functional",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Resident can make at most one reservation per day per area",
+      "expected_code_evidence": [
+        "Per-area per-day reservation limit validation",
+        "Resident-facing validation error messaging"
+      ],
+      "expected_test_evidence": [
+        "Integration test for same-day same-area reservation cap",
+        "UI test for blocked second reservation"
+      ]
+    },
+    {
+      "id": "FR-31",
+      "type": "functional",
+      "slice": "S8",
+      "module": "parking",
+      "summary": "Admin can assign one or more parking spots to an apartment",
+      "expected_code_evidence": [
+        "Parking assignment service and admin UI for apartment-to-spot allocation",
+        "Parking spot model linked to apartments"
+      ],
+      "expected_test_evidence": [
+        "Integration test for assigning multiple spots to an apartment within rules",
+        "Admin parking-management UI test"
+      ]
+    },
+    {
+      "id": "FR-32",
+      "type": "functional",
+      "slice": "S8",
+      "module": "visitor-vehicles",
+      "summary": "Security registers visitor plate and visited apartment",
+      "expected_code_evidence": [
+        "Security-only visitor vehicle create flow with plate and apartment selection",
+        "Visitor vehicle persistence with entry timestamp and security user"
+      ],
+      "expected_test_evidence": [
+        "Integration test for visitor vehicle registration",
+        "Security Playwright flow for vehicle entry"
+      ]
+    },
+    {
+      "id": "FR-33",
+      "type": "functional",
+      "slice": "S8",
+      "module": "visitor-vehicles",
+      "summary": "Visitor vehicles have maximum 4-hour parking duration",
+      "expected_code_evidence": [
+        "Visitor duration rule and deadline computation logic",
+        "UI or service state that shows elapsed/remaining visitor duration"
+      ],
+      "expected_test_evidence": [
+        "Unit or integration test for 4-hour visitor cap logic",
+        "Alert-related test covering overstay threshold evaluation"
+      ]
+    },
+    {
+      "id": "FR-34",
+      "type": "functional",
+      "slice": "S8",
+      "module": "visitor-alerts",
+      "summary": "Automatic warning to security on visitor overstay",
+      "expected_code_evidence": [
+        "Worker or scheduled alert path for visitor overstays",
+        "Security notification or dashboard warning surface"
+      ],
+      "expected_test_evidence": [
+        "Worker test for overstay alert generation",
+        "Integration test that overstay appears in security warning surface"
+      ]
+    },
+    {
+      "id": "FR-35",
+      "type": "functional",
+      "slice": "S8",
+      "module": "parking",
+      "summary": "Admin can view live parking occupancy map",
+      "expected_code_evidence": [
+        "Parking occupancy aggregation endpoint or query",
+        "Admin occupancy visualization or map/grid view"
+      ],
+      "expected_test_evidence": [
+        "Integration test for occupancy summary output",
+        "Admin UI test for occupancy map render"
+      ]
+    },
+    {
+      "id": "FR-36",
+      "type": "functional",
+      "slice": "S9",
+      "module": "dashboard",
+      "summary": "Admin dashboard shows total collection, open requests, and occupancy rate",
+      "expected_code_evidence": [
+        "Dashboard aggregation endpoint returning KPI values",
+        "Admin dashboard cards for collection, open requests, and occupancy"
+      ],
+      "expected_test_evidence": [
+        "Integration test for dashboard KPI aggregation",
+        "Admin dashboard UI test for KPI card display"
+      ]
+    },
+    {
+      "id": "FR-37",
+      "type": "functional",
+      "slice": "S9",
+      "module": "reports",
+      "summary": "Export monthly dues collection report as PDF",
+      "expected_code_evidence": [
+        "PDF report generation endpoint or service for monthly dues",
+        "Admin report export action in web UI"
+      ],
+      "expected_test_evidence": [
+        "Integration test for PDF report generation",
+        "UI or e2e test for report export action"
+      ]
+    },
+    {
+      "id": "FR-38",
+      "type": "functional",
+      "slice": "S9",
+      "module": "dashboard",
+      "summary": "Show maintenance requests by category as pie chart",
+      "expected_code_evidence": [
+        "Maintenance category aggregation query for reporting",
+        "Pie chart component on admin dashboard"
+      ],
+      "expected_test_evidence": [
+        "Aggregation test for maintenance categories",
+        "Dashboard UI test for pie chart render"
+      ]
+    },
+    {
+      "id": "FR-39",
+      "type": "functional",
+      "slice": "S9",
+      "module": "dashboard",
+      "summary": "Show 12-month dues payment trend as line chart",
+      "expected_code_evidence": [
+        "12-month payment-trend aggregation query",
+        "Line chart component on admin dashboard"
+      ],
+      "expected_test_evidence": [
+        "Aggregation test for 12-month trend output",
+        "Dashboard UI test for line chart render"
+      ]
+    },
+    {
+      "id": "FR-40",
+      "type": "functional",
+      "slice": "S9",
+      "module": "reports",
+      "summary": "Admin can filter and view debtor apartment list",
+      "expected_code_evidence": [
+        "Debtor-list query with admin filters",
+        "Admin debtor table with filter controls"
+      ],
+      "expected_test_evidence": [
+        "Integration test for debtor filtering",
+        "Admin UI or Playwright test for debtor list filters"
+      ]
+    },
+    {
+      "id": "NFR-01",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "performance",
+      "summary": "Page load time under 3 seconds",
+      "expected_code_evidence": [
+        "Performance-minded production build, lazy loading, and efficient data-fetch strategy",
+        "Benchmark or smoke script documenting measured page-load threshold"
+      ],
+      "expected_test_evidence": [
+        "Performance check script asserting page-load target",
+        "Recorded benchmark output or automated perf test in repo"
+      ]
+    },
+    {
+      "id": "NFR-02",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "performance",
+      "summary": "Support 100 concurrent users",
+      "expected_code_evidence": [
+        "Stateless API patterns and database access appropriate for concurrent load",
+        "Load-test or concurrency benchmark script in the repo"
+      ],
+      "expected_test_evidence": [
+        "Load-test output or script targeting 100 concurrent users",
+        "Documented benchmark evidence in final verification"
+      ]
+    },
+    {
+      "id": "NFR-03",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "performance",
+      "summary": "Database queries respond within 500 ms",
+      "expected_code_evidence": [
+        "Indexed query paths and bounded reporting queries",
+        "Query timing or benchmark script for critical database paths"
+      ],
+      "expected_test_evidence": [
+        "Query benchmark output covering target endpoints",
+        "Performance script that fails when critical queries exceed threshold"
+      ]
+    },
+    {
+      "id": "NFR-04",
+      "type": "nonfunctional",
+      "slice": "S2",
+      "module": "security",
+      "summary": "Use HTTPS for HTTP traffic",
+      "expected_code_evidence": [
+        "Environment or reverse-proxy config that honors HTTPS mode and secure cookies",
+        "README or Docker instructions that include HTTPS-ready local or proxied deployment path"
+      ],
+      "expected_test_evidence": [
+        "Config verification test or smoke check for secure cookie / trusted proxy behavior",
+        "Final QA evidence that deployment path is HTTPS-ready"
+      ]
+    },
+    {
+      "id": "NFR-05",
+      "type": "nonfunctional",
+      "slice": "S2",
+      "module": "security",
+      "summary": "Lock account for 15 minutes after 5 failed logins",
+      "expected_code_evidence": [
+        "Failed-login tracking and lockout persistence",
+        "Auth service enforcement of 5 attempts and 15-minute lock duration"
+      ],
+      "expected_test_evidence": [
+        "Integration test for 5 failed attempts causing lockout",
+        "Time-window test for post-lockout recovery"
+      ]
+    },
+    {
+      "id": "NFR-06",
+      "type": "nonfunctional",
+      "slice": "S2",
+      "module": "security",
+      "summary": "Validate against XSS and SQL injection",
+      "expected_code_evidence": [
+        "Zod or equivalent request validation and sanitized render paths",
+        "Prisma parameterized access rather than raw string-built queries"
+      ],
+      "expected_test_evidence": [
+        "Validation tests rejecting malicious payloads",
+        "Security smoke script or integration tests for common injection attempts"
+      ]
+    },
+    {
+      "id": "NFR-07",
+      "type": "nonfunctional",
+      "slice": "S2",
+      "module": "security",
+      "summary": "Passwords use bcrypt and minimum length 12",
+      "expected_code_evidence": [
+        "Password policy requiring minimum 12 characters",
+        "Bcrypt hashing in create/reset/login-related flows"
+      ],
+      "expected_test_evidence": [
+        "Validation test rejecting short passwords",
+        "Hashing test confirming bcrypt-backed storage and verification"
+      ]
+    },
+    {
+      "id": "NFR-08",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "operations",
+      "summary": "Target 99.5% uptime excluding planned maintenance",
+      "expected_code_evidence": [
+        "Health checks, restart-friendly services, and maintenance-mode handling",
+        "Operational guidance in README or handover for uptime and maintenance window"
+      ],
+      "expected_test_evidence": [
+        "Health-check smoke tests",
+        "Final QA evidence that services recover and expose health endpoints"
+      ]
+    },
+    {
+      "id": "NFR-09",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "frontend",
+      "summary": "Responsive mobile and desktop UI",
+      "expected_code_evidence": [
+        "Responsive layout implementation across core admin, resident, and security screens",
+        "CSS or component system with mobile and desktop states"
+      ],
+      "expected_test_evidence": [
+        "Responsive UI smoke checks",
+        "Playwright or component tests across mobile and desktop viewports"
+      ]
+    },
+    {
+      "id": "NFR-10",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "usability",
+      "summary": "New users can learn system within 30 minutes",
+      "expected_code_evidence": [
+        "Clear navigation, labels, and self-explanatory workflows with Turkish copy",
+        "README or handover notes that include demo accounts and user flows"
+      ],
+      "expected_test_evidence": [
+        "Role-based e2e journeys covering common tasks without hidden manual steps",
+        "Final QA narrative or smoke evidence that main flows are discoverable"
+      ]
+    },
+    {
+      "id": "NFR-11",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "scalability",
+      "summary": "Support sites up to 500 apartments without extra infrastructure",
+      "expected_code_evidence": [
+        "Schema, pagination, and query patterns that scale to 500 apartments",
+        "Seed or benchmark path that can exercise larger apartment counts"
+      ],
+      "expected_test_evidence": [
+        "Benchmark or seed-based smoke check at larger apartment counts",
+        "Final QA evidence for acceptable behavior with expanded demo size"
+      ]
+    },
+    {
+      "id": "NFR-12",
+      "type": "nonfunctional",
+      "slice": "S1",
+      "module": "devops",
+      "summary": "Application is distributable as Docker containers",
+      "expected_code_evidence": [
+        "Dockerfiles and Docker Compose for db, api, web, and worker",
+        "Documented local startup and shutdown commands"
+      ],
+      "expected_test_evidence": [
+        "Foundation gate using Docker Compose config and startup",
+        "Final end-to-end Docker boot verification"
+      ]
+    },
+    {
+      "id": "NFR-13",
+      "type": "nonfunctional",
+      "slice": "S10",
+      "module": "operations",
+      "summary": "Daily automatic backups with 30-day retention",
+      "expected_code_evidence": [
+        "Backup job or script plus retention cleanup logic",
+        "README or handover instructions for running and verifying backups"
+      ],
+      "expected_test_evidence": [
+        "Backup verification script or test",
+        "Final QA evidence that daily backup and 30-day retention are represented"
+      ]
+    },
+    {
+      "id": "IK-01",
+      "type": "business-rule",
+      "slice": "S4",
+      "module": "dues",
+      "summary": "Monthly dues due date is the 5th day of each month",
+      "expected_code_evidence": [
+        "Dues generation logic setting default due date to day 5",
+        "Displayed due-date fields on admin or resident dues surfaces"
+      ],
+      "expected_test_evidence": [
+        "Unit or integration test for due-date generation on day 5",
+        "History or dashboard test exposing correct due date"
+      ]
+    },
+    {
+      "id": "IK-02",
+      "type": "business-rule",
+      "slice": "S4",
+      "module": "dues",
+      "summary": "Apply 2% monthly late fee after 5 days overdue",
+      "expected_code_evidence": [
+        "Grace-period calculation plus 2% fee logic",
+        "Stored overdue status that distinguishes fee-eligible dues"
+      ],
+      "expected_test_evidence": [
+        "Calculation test across grace period boundary",
+        "Integration test showing fee after overdue threshold"
+      ]
+    },
+    {
+      "id": "IK-03",
+      "type": "business-rule",
+      "slice": "S4",
+      "module": "dues-notifications",
+      "summary": "Alert admin after 3 consecutive unpaid months",
+      "expected_code_evidence": [
+        "Delinquency detection logic across consecutive months",
+        "Admin alert creation when threshold is reached"
+      ],
+      "expected_test_evidence": [
+        "Worker or service test for 3-month delinquency detection",
+        "Integration test for admin alert creation"
+      ]
+    },
+    {
+      "id": "IK-04",
+      "type": "business-rule",
+      "slice": "S4",
+      "module": "dues-admin",
+      "summary": "Only admin can change due amount, effective next month",
+      "expected_code_evidence": [
+        "Admin-only due-amount update flow",
+        "Scheduling logic that applies changed amount starting next month"
+      ],
+      "expected_test_evidence": [
+        "RBAC test for due-amount change restriction",
+        "Integration test for deferred application in next billing cycle"
+      ]
+    },
+    {
+      "id": "IK-05",
+      "type": "business-rule",
+      "slice": "S5",
+      "module": "maintenance",
+      "summary": "Resident can have at most 3 open maintenance requests",
+      "expected_code_evidence": [
+        "Open-ticket count validation in maintenance create flow",
+        "Resident-facing error message when limit is exceeded"
+      ],
+      "expected_test_evidence": [
+        "Integration test blocking fourth open request",
+        "UI test for visible ticket-limit error"
+      ]
+    },
+    {
+      "id": "IK-06",
+      "type": "business-rule",
+      "slice": "S5",
+      "module": "maintenance",
+      "summary": "Emergency categories require response within 2 hours",
+      "expected_code_evidence": [
+        "Emergency category handling with response deadline tracking",
+        "Admin prioritization or alert logic for emergency tickets"
+      ],
+      "expected_test_evidence": [
+        "Deadline calculation test for emergency categories",
+        "Alert or escalation test for missed emergency window"
+      ]
+    },
+    {
+      "id": "IK-07",
+      "type": "business-rule",
+      "slice": "S5",
+      "module": "maintenance-escalation",
+      "summary": "Escalate unanswered requests after 7 days",
+      "expected_code_evidence": [
+        "Maintenance escalation job or scheduled check for 7-day threshold",
+        "Admin escalation notification output"
+      ],
+      "expected_test_evidence": [
+        "Worker test for 7-day escalation logic",
+        "Integration test for escalation notification creation"
+      ]
+    },
+    {
+      "id": "IK-08",
+      "type": "business-rule",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Gym reservation lasts at most 2 hours",
+      "expected_code_evidence": [
+        "Area-specific duration rule for gym reservations",
+        "UI validation communicating 2-hour gym limit"
+      ],
+      "expected_test_evidence": [
+        "Integration test rejecting gym reservations longer than 2 hours",
+        "Resident UI test for gym duration validation"
+      ]
+    },
+    {
+      "id": "IK-09",
+      "type": "business-rule",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Meeting room cap is 4 hours per resident per day",
+      "expected_code_evidence": [
+        "Per-day per-resident duration aggregation for meeting room",
+        "Validation messaging for exceeded daily limit"
+      ],
+      "expected_test_evidence": [
+        "Integration test for 4-hour daily cap across multiple meeting-room reservations",
+        "UI or e2e test showing blocked excess booking"
+      ]
+    },
+    {
+      "id": "IK-10",
+      "type": "business-rule",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "Residents with unpaid dues cannot reserve common areas",
+      "expected_code_evidence": [
+        "Reservation eligibility check against unpaid-dues state",
+        "Resident-facing blocked-reservation message"
+      ],
+      "expected_test_evidence": [
+        "Integration test denying reservation for debtor resident",
+        "Resident UI or Playwright test covering unpaid-dues block"
+      ]
+    },
+    {
+      "id": "IK-11",
+      "type": "business-rule",
+      "slice": "S7",
+      "module": "reservations",
+      "summary": "No reservation between 23:00 and 07:00",
+      "expected_code_evidence": [
+        "Time-window validation for disallowed late-night or early-morning bookings",
+        "Calendar UI that blocks or disables forbidden hours"
+      ],
+      "expected_test_evidence": [
+        "Integration test rejecting forbidden reservation times",
+        "UI test verifying blocked time slots"
+      ]
+    },
+    {
+      "id": "IK-12",
+      "type": "business-rule",
+      "slice": "S8",
+      "module": "parking",
+      "summary": "At most 2 parking spots per apartment",
+      "expected_code_evidence": [
+        "Parking assignment validation capping apartment spots at 2",
+        "Admin feedback for assignment-limit violations"
+      ],
+      "expected_test_evidence": [
+        "Integration test rejecting third assigned spot",
+        "Admin UI test for visible assignment-limit error"
+      ]
+    },
+    {
+      "id": "IK-13",
+      "type": "business-rule",
+      "slice": "S8",
+      "module": "visitor-vehicles",
+      "summary": "Visitor vehicles stay on site at most 4 hours",
+      "expected_code_evidence": [
+        "Visitor duration tracking and threshold comparison",
+        "Exit workflow or warning logic using 4-hour rule"
+      ],
+      "expected_test_evidence": [
+        "Integration or worker test for 4-hour visitor limit",
+        "Security journey test for warning or overdue state"
+      ]
+    },
+    {
+      "id": "IK-14",
+      "type": "business-rule",
+      "slice": "S8",
+      "module": "parking",
+      "summary": "Accessible spots cannot be reassigned to other apartments",
+      "expected_code_evidence": [
+        "Parking spot type model preserving handicapped designation",
+        "Assignment logic that blocks reassignment of accessible spots"
+      ],
+      "expected_test_evidence": [
+        "Integration test rejecting invalid accessible-spot assignment",
+        "Admin UI test for blocked accessible-spot reassignment"
+      ]
+    },
+    {
+      "id": "IK-15",
+      "type": "business-rule",
+      "slice": "S10",
+      "module": "operations",
+      "summary": "Maintenance mode allowed daily between 02:00 and 03:00",
+      "expected_code_evidence": [
+        "Maintenance-mode config or guard that can enforce scheduled downtime window",
+        "Operational documentation describing planned maintenance handling"
+      ],
+      "expected_test_evidence": [
+        "Config or unit test for maintenance-window rule if automated",
+        "Final QA evidence that maintenance-mode behavior is represented"
+      ]
+    },
+    {
+      "id": "IK-16",
+      "type": "business-rule",
+      "slice": "S10",
+      "module": "compliance",
+      "summary": "Deleted user data retained for 6 months then fully removed",
+      "expected_code_evidence": [
+        "Soft-delete or retention policy implementation for user data lifecycle",
+        "Operational cleanup path for delayed hard deletion"
+      ],
+      "expected_test_evidence": [
+        "Retention-policy test covering deleted-user lifecycle metadata",
+        "Final QA evidence for documented 6-month deletion path"
+      ]
+    },
+    {
+      "id": "IK-17",
+      "type": "business-rule",
+      "slice": "S10",
+      "module": "audit",
+      "summary": "Audit logs for login, payment, and request actions kept for at least 1 year",
+      "expected_code_evidence": [
+        "Audit log model or append-only records for login, payment, and maintenance actions",
+        "Retention configuration or documentation for 1-year log storage"
+      ],
+      "expected_test_evidence": [
+        "Integration tests that create audit records for key actions",
+        "Final QA evidence that log-retention policy is documented and implemented"
+      ]
+    }
+  ]
+}

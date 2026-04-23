@@ -1,0 +1,42 @@
+{
+  "name": "@asys/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "db:migrate": "DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/asys?schema=public} prisma migrate deploy",
+    "db:seed": "DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/asys?schema=public} node --import tsx prisma/seed.ts",
+    "prisma:generate": "XDG_CACHE_HOME=${XDG_CACHE_HOME:-/tmp} prisma generate"
+  },
+  "dependencies": {
+    "@asys/contracts": "0.1.0",
+    "@prisma/client": "^6.7.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.16.3",
+    "zod": "^3.25.42"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/morgan": "^1.9.9",
+    "@types/pg": "^8.15.6",
+    "@types/supertest": "^6.0.3",
+    "prisma": "^6.7.0",
+    "supertest": "^7.1.1"
+  }
+}
