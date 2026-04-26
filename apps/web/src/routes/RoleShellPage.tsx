@@ -26,6 +26,7 @@ import {
   NativeSelect,
   SimpleGrid,
   Stack,
+  Tabs,
   Text,
   TextInput,
   Textarea,
@@ -170,7 +171,7 @@ function NotificationList({
   }
 
   return (
-    <Stack className="announcement-list">
+    <Stack className="announcement-list scroll-region">
       {notifications.map((notification) => (
         <Card key={notification.id} className="announcement-card" withBorder radius="lg" shadow="sm">
           <Stack gap={6}>
@@ -227,7 +228,7 @@ function AnnouncementList({
   }
 
   return (
-    <Stack className="announcement-list">
+    <Stack className="announcement-list scroll-region">
       {announcements.map((announcement) => (
         <Card key={announcement.id} className="announcement-card" withBorder radius="lg" shadow="sm">
           <Group justify="space-between" align="flex-start">
@@ -811,388 +812,425 @@ export function AdminShellPage() {
         </Alert>
       ) : null}
 
-      {dashboard ? (
-        <section className="announcement-section" data-testid="admin-dashboard">
-          <h3>Dashboard</h3>
-          <div className="kpi-grid">
-            <article className="kpi-card">
-              <h4>Toplam Tahsilat</h4>
-              <p data-testid="kpi-total-collection">{formatMoney(dashboard.totalCollection)} TL</p>
-            </article>
-            <article className="kpi-card">
-              <h4>Açık Bakım</h4>
-              <p data-testid="kpi-open-maintenance">{dashboard.openMaintenanceCount}</p>
-            </article>
-            <article className="kpi-card">
-              <h4>Park Doluluk</h4>
-              <p data-testid="kpi-occupancy">%{formatMoney(dashboard.occupancyRate)}</p>
-            </article>
-          </div>
-          <div className="dashboard-grid">
-            <article className="chart-container">
-              <h4>Bakım Kategori Dağılımı</h4>
-              <MaintenancePieChart buckets={dashboard.maintenanceByCategory} />
-            </article>
-            <article className="chart-container">
-              <h4>12 Aylık Tahsilat Trendi</h4>
-              <DuesTrendLineChart points={dashboard.duesTrend} />
-            </article>
-          </div>
-          <article className="announcement-card">
-            <h4>Borclu Daireler (Gelismis Filtre)</h4>
-            <div className="auth-form debtor-filter-form">
-              <TextInput
-                id="debtor-search"
-                data-testid="debtor-search"
-                label="Daire Ara"
-                value={debtorSearch}
-                onChange={(event) => setDebtorSearch(event.target.value)}
-                placeholder="A-1, B-8..."
-              />
-              <TextInput
-                id="debtor-min-outstanding"
-                data-testid="debtor-min-outstanding"
-                label="Min Borc (TL)"
-                type="number"
-                min={0}
-                step="0.01"
-                value={debtorMinOutstanding}
-                onChange={(event) => setDebtorMinOutstanding(event.target.value)}
-              />
-              <Checkbox
-                id="debtor-only-overdue"
-                data-testid="debtor-only-overdue"
-                label="Sadece Gecikmeli"
-                checked={debtorOnlyOverdue}
-                onChange={(event) => setDebtorOnlyOverdue(event.currentTarget.checked)}
-                mt={30}
-              />
-            </div>
-            <p data-testid="debtor-count">
-              Filtrelenen borclu daire: {filteredDebtors.length} / {dashboard.debtorApartments.length}
-            </p>
-            <div className="announcement-list">
-              {filteredDebtors.map((debtor) => (
-                <article key={debtor.apartmentId} className="announcement-card debtor-card">
-                  <h4>{debtor.apartmentLabel}</h4>
-                  <p>Borc: {formatMoney(debtor.outstandingAmount)} TL</p>
-                  <p>Gecikmis kayit: {debtor.overdueCount}</p>
-                </article>
-              ))}
-              {filteredDebtors.length === 0 ? <p>Filtreye uyan borclu daire yok.</p> : null}
-            </div>
-          </article>
-          <div className="inline-actions">
-            <p>Borclu daire sayisi: {dashboard.debtorApartments.length}</p>
-            <Anchor href={monthlyReportUrl(reportMonth)}>Aylik Tahsilat PDF Raporu</Anchor>
-          </div>
-        </section>
-      ) : null}
+      <Tabs defaultValue="dashboard" keepMounted={false} className="module-tabs">
+        <Tabs.List grow>
+          <Tabs.Tab value="dashboard" data-testid="admin-tab-dashboard">Dashboard</Tabs.Tab>
+          <Tabs.Tab value="users" data-testid="admin-tab-users">Kullanicilar</Tabs.Tab>
+          <Tabs.Tab value="announcements" data-testid="admin-tab-announcements">Duyurular</Tabs.Tab>
+          <Tabs.Tab value="maintenance" data-testid="admin-tab-maintenance">Bakim</Tabs.Tab>
+          <Tabs.Tab value="dues" data-testid="admin-tab-dues">Aidat</Tabs.Tab>
+          <Tabs.Tab value="reservations" data-testid="admin-tab-reservations">Rezervasyon</Tabs.Tab>
+          <Tabs.Tab value="parking" data-testid="admin-tab-parking">Park</Tabs.Tab>
+          <Tabs.Tab value="notifications" data-testid="admin-tab-notifications">Bildirimler</Tabs.Tab>
+        </Tabs.List>
 
-      <section className="announcement-section">
-        <h3>Kullanici Yonetimi</h3>
-        <div className="auth-form">
-          <TextInput
-            id="create-user-name"
-            label="Ad Soyad"
-            value={createUserName}
-            onChange={(event) => setCreateUserName(event.target.value)}
-          />
-          <TextInput
-            id="create-user-email"
-            label="E-posta"
-            type="email"
-            value={createUserEmail}
-            onChange={(event) => setCreateUserEmail(event.target.value)}
-          />
-          <TextInput
-            id="create-user-password"
-            label="Sifre"
-            type="text"
-            minLength={12}
-            value={createUserPassword}
-            onChange={(event) => setCreateUserPassword(event.target.value)}
-          />
-          <NativeSelect
-            id="create-user-role"
-            label="Rol"
-            value={createUserRole}
-            onChange={(event) => setCreateUserRole(event.target.value as Role)}
-            data={[
-              { value: "RESIDENT", label: "Sakin" },
-              { value: "SECURITY", label: "Guvenlik" },
-              { value: "ADMIN", label: "Yonetici" }
-            ]}
-          />
-          <NativeSelect
-            id="create-user-apartment"
-            label="Daire (opsiyonel)"
-            value={createUserApartmentId}
-            onChange={(event) => setCreateUserApartmentId(event.target.value)}
-            data={[
-              { value: "", label: "Seciniz" },
-              ...apartments.map((apartment) => ({
-                value: apartment.id,
-                label: apartment.label
-              }))
-            ]}
-          />
-          <Button type="button" disabled={isCreateUserSubmitting} onClick={() => void onCreateUser()}>
-            {isCreateUserSubmitting ? "Olusturuluyor..." : "Kullanici Olustur"}
-          </Button>
-        </div>
-        <FeedbackMessage feedback={userFeedback} testId="admin-user-feedback" />
-        <div className="user-list">
-          {users.map((managedUser) => (
-            <div key={managedUser.id} className="user-row">
-              <div>
-                <p className="user-name">
-                  {managedUser.name} ({roleLabel(managedUser.role)})
-                </p>
-                <p>{managedUser.email}</p>
-                <p>Daire: {managedUser.apartmentLabel ?? "-"}</p>
-                <p>Durum: {managedUser.isActive ? "Aktif" : "Pasif"}</p>
+        <Tabs.Panel value="dashboard" pt="md">
+          {dashboard ? (
+            <section className="announcement-section" data-testid="admin-dashboard">
+              <h3>Dashboard</h3>
+              <div className="kpi-grid">
+                <article className="kpi-card">
+                  <h4>Toplam Tahsilat</h4>
+                  <p data-testid="kpi-total-collection">{formatMoney(dashboard.totalCollection)} TL</p>
+                </article>
+                <article className="kpi-card">
+                  <h4>Açık Bakım</h4>
+                  <p data-testid="kpi-open-maintenance">{dashboard.openMaintenanceCount}</p>
+                </article>
+                <article className="kpi-card">
+                  <h4>Park Doluluk</h4>
+                  <p data-testid="kpi-occupancy">%{formatMoney(dashboard.occupancyRate)}</p>
+                </article>
               </div>
-              <Button
-                type="button"
-                disabled={pendingUserId === managedUser.id || managedUser.id === user.id}
-                onClick={() => {
-                  void onToggleUserActivation(managedUser);
-                }}
-              >
-                {managedUser.isActive ? "Pasife Al" : "Aktif Et"}
+              <div className="dashboard-grid">
+                <article className="chart-container">
+                  <h4>Bakım Kategori Dağılımı</h4>
+                  <MaintenancePieChart buckets={dashboard.maintenanceByCategory} />
+                </article>
+                <article className="chart-container">
+                  <h4>12 Aylık Tahsilat Trendi</h4>
+                  <DuesTrendLineChart points={dashboard.duesTrend} />
+                </article>
+              </div>
+              <article className="chart-container">
+                <h4>Anlik Park Doluluk Haritasi</h4>
+                <ParkingOccupancyMap spots={parkingSpots} />
+              </article>
+              <article className="announcement-card">
+                <h4>Borclu Daireler (Gelismis Filtre)</h4>
+                <div className="auth-form debtor-filter-form">
+                  <TextInput
+                    id="debtor-search"
+                    data-testid="debtor-search"
+                    label="Daire Ara"
+                    value={debtorSearch}
+                    onChange={(event) => setDebtorSearch(event.target.value)}
+                    placeholder="A-1, B-8..."
+                  />
+                  <TextInput
+                    id="debtor-min-outstanding"
+                    data-testid="debtor-min-outstanding"
+                    label="Min Borc (TL)"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={debtorMinOutstanding}
+                    onChange={(event) => setDebtorMinOutstanding(event.target.value)}
+                  />
+                  <Checkbox
+                    id="debtor-only-overdue"
+                    data-testid="debtor-only-overdue"
+                    label="Sadece Gecikmeli"
+                    checked={debtorOnlyOverdue}
+                    onChange={(event) => setDebtorOnlyOverdue(event.currentTarget.checked)}
+                    mt={30}
+                  />
+                </div>
+                <p data-testid="debtor-count">
+                  Filtrelenen borclu daire: {filteredDebtors.length} / {dashboard.debtorApartments.length}
+                </p>
+                <div className="announcement-list scroll-region compact-scroll">
+                  {filteredDebtors.map((debtor) => (
+                    <article key={debtor.apartmentId} className="announcement-card debtor-card">
+                      <h4>{debtor.apartmentLabel}</h4>
+                      <p>Borc: {formatMoney(debtor.outstandingAmount)} TL</p>
+                      <p>Gecikmis kayit: {debtor.overdueCount}</p>
+                    </article>
+                  ))}
+                  {filteredDebtors.length === 0 ? <p>Filtreye uyan borclu daire yok.</p> : null}
+                </div>
+              </article>
+              <div className="inline-actions">
+                <p>Borclu daire sayisi: {dashboard.debtorApartments.length}</p>
+                <Anchor href={monthlyReportUrl(reportMonth)}>Aylik Tahsilat PDF Raporu</Anchor>
+              </div>
+            </section>
+          ) : (
+            <section className="announcement-section" data-testid="admin-dashboard">
+              <Text c="dimmed">Dashboard verisi hazir degil.</Text>
+            </section>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="users" pt="md">
+          <section className="announcement-section">
+            <h3>Kullanici Yonetimi</h3>
+            <div className="auth-form">
+              <TextInput
+                id="create-user-name"
+                label="Ad Soyad"
+                value={createUserName}
+                onChange={(event) => setCreateUserName(event.target.value)}
+              />
+              <TextInput
+                id="create-user-email"
+                label="E-posta"
+                type="email"
+                value={createUserEmail}
+                onChange={(event) => setCreateUserEmail(event.target.value)}
+              />
+              <TextInput
+                id="create-user-password"
+                label="Sifre"
+                type="text"
+                minLength={12}
+                value={createUserPassword}
+                onChange={(event) => setCreateUserPassword(event.target.value)}
+              />
+              <NativeSelect
+                id="create-user-role"
+                label="Rol"
+                value={createUserRole}
+                onChange={(event) => setCreateUserRole(event.target.value as Role)}
+                data={[
+                  { value: "RESIDENT", label: "Sakin" },
+                  { value: "SECURITY", label: "Guvenlik" },
+                  { value: "ADMIN", label: "Yonetici" }
+                ]}
+              />
+              <NativeSelect
+                id="create-user-apartment"
+                label="Daire (opsiyonel)"
+                value={createUserApartmentId}
+                onChange={(event) => setCreateUserApartmentId(event.target.value)}
+                data={[
+                  { value: "", label: "Seciniz" },
+                  ...apartments.map((apartment) => ({
+                    value: apartment.id,
+                    label: apartment.label
+                  }))
+                ]}
+              />
+              <Button type="button" disabled={isCreateUserSubmitting} onClick={() => void onCreateUser()}>
+                {isCreateUserSubmitting ? "Olusturuluyor..." : "Kullanici Olustur"}
               </Button>
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="announcement-section">
-        <h3>Duyurular</h3>
-        <div className="auth-form">
-          <TextInput
-            id="announcement-title"
-            data-testid="admin-announcement-title"
-            label="Baslik"
-            value={announcementTitle}
-            onChange={(event) => setAnnouncementTitle(event.target.value)}
-          />
-          <Textarea
-            id="announcement-content"
-            data-testid="admin-announcement-content"
-            label="Icerik"
-            rows={4}
-            value={announcementContent}
-            onChange={(event) => setAnnouncementContent(event.target.value)}
-          />
-          <Button
-            type="button"
-            data-testid="admin-announcement-publish"
-            disabled={isAnnouncementSubmitting}
-            onClick={() => void onPublishAnnouncement()}
-          >
-            {isAnnouncementSubmitting ? "Yayimlaniyor..." : "Duyuru Yayimla"}
-          </Button>
-        </div>
-        <FeedbackMessage feedback={announcementFeedback} testId="admin-announcement-feedback" />
-        <div className="announcement-list">
-          {announcements.map((announcement) => (
-            <article key={announcement.id} className="announcement-card">
-              <header>
-                <h4>{announcement.title}</h4>
-                <p>{formatDateTime(announcement.publishedAt)}</p>
-              </header>
-              <p>{announcement.content}</p>
-              <div className="inline-actions">
-                <Button
-                  type="button"
-                  disabled={announcementBusyId === announcement.id}
-                  onClick={() => {
-                    void onQuickUpdateAnnouncement(announcement);
-                  }}
-                >
-                  Hemen Guncelle
-                </Button>
-                <Button
-                  type="button"
-                  disabled={announcementBusyId === announcement.id}
-                  onClick={() => {
-                    void onDeleteAnnouncement(announcement.id);
-                  }}
-                >
-                  Sil
-                </Button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="announcement-section">
-        <h3>Bakim Talepleri</h3>
-        <div className="auth-form maintenance-filter-form">
-          <TextInput
-            id="maintenance-category"
-            label="Kategori"
-            value={maintenanceFilterCategory}
-            onChange={(event) => setMaintenanceFilterCategory(event.target.value)}
-          />
-          <NativeSelect
-            id="maintenance-status"
-            label="Durum"
-            value={maintenanceFilterStatus}
-            onChange={(event) => setMaintenanceFilterStatus((event.target.value || "") as MaintenanceStatus | "")}
-            data={[
-              { value: "", label: "Tum durumlar" },
-              ...maintenanceStatuses.map((status) => ({
-                value: status,
-                label: formatMaintenanceStatus(status)
-              }))
-            ]}
-          />
-          <TextInput
-            id="maintenance-date-from"
-            label="Baslangic"
-            type="date"
-            value={maintenanceFilterDateFrom}
-            onChange={(event) => setMaintenanceFilterDateFrom(event.target.value)}
-          />
-          <TextInput
-            id="maintenance-date-to"
-            label="Bitis"
-            type="date"
-            value={maintenanceFilterDateTo}
-            onChange={(event) => setMaintenanceFilterDateTo(event.target.value)}
-          />
-          <Button type="button" disabled={isMaintenanceFilterSubmitting} onClick={() => void onApplyMaintenanceFilters()}>
-            {isMaintenanceFilterSubmitting ? "Filtreleniyor..." : "Filtrele"}
-          </Button>
-        </div>
-        <FeedbackMessage feedback={maintenanceFeedback} testId="admin-maintenance-feedback" />
-        <div className="announcement-list">
-          {maintenanceRequests.map((request) => (
-            <article key={request.id} className="announcement-card" data-testid={`admin-maintenance-${request.id}`}>
-              <h4>{request.category}</h4>
-              <p>{request.description}</p>
-              <p>Durum: {formatMaintenanceStatus(request.status)}</p>
-              <div className="inline-actions">
-                {maintenanceStatuses.map((status) => (
+            <FeedbackMessage feedback={userFeedback} testId="admin-user-feedback" />
+            <div className="user-list scroll-region">
+              {users.map((managedUser) => (
+                <div key={managedUser.id} className="user-row">
+                  <div>
+                    <p className="user-name">
+                      {managedUser.name} ({roleLabel(managedUser.role)})
+                    </p>
+                    <p>{managedUser.email}</p>
+                    <p>Daire: {managedUser.apartmentLabel ?? "-"}</p>
+                    <p>Durum: {managedUser.isActive ? "Aktif" : "Pasif"}</p>
+                  </div>
                   <Button
-                    key={status}
                     type="button"
-                    data-testid={`admin-maintenance-${request.id}-${status}`}
-                    disabled={maintenanceBusyId === request.id || request.status === status}
+                    disabled={pendingUserId === managedUser.id || managedUser.id === user.id}
                     onClick={() => {
-                      void onUpdateMaintenanceStatus(request.id, status);
+                      void onToggleUserActivation(managedUser);
                     }}
                   >
-                    {formatMaintenanceStatus(status)}
+                    {managedUser.isActive ? "Pasife Al" : "Aktif Et"}
                   </Button>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+                </div>
+              ))}
+            </div>
+          </section>
+        </Tabs.Panel>
 
-      <section className="announcement-section">
-        <h3>Aidat ve Odemeler</h3>
-        <div className="inline-actions">
-          <TextInput
-            type="month"
-            data-testid="admin-report-month"
-            value={reportMonth}
-            onChange={(event) => setReportMonth(event.target.value)}
-          />
-          <Button
-            type="button"
-            data-testid="admin-generate-dues"
-            disabled={isDuesSubmitting}
-            onClick={() => void onGenerateMonthlyDues()}
-          >
-            {isDuesSubmitting ? "Olusturuluyor..." : "Aylik Aidat Olustur"}
-          </Button>
-          <Anchor href={monthlyReportUrl(reportMonth)}>PDF Tahsilat Raporu</Anchor>
-        </div>
-        <FeedbackMessage feedback={duesFeedback} testId="admin-dues-feedback" />
-        <p>Aidat kaydi: {dues.length}</p>
-        <p>Odeme kaydi: {payments.length}</p>
-      </section>
+        <Tabs.Panel value="announcements" pt="md">
+          <section className="announcement-section">
+            <h3>Duyurular</h3>
+            <div className="auth-form">
+              <TextInput
+                id="announcement-title"
+                data-testid="admin-announcement-title"
+                label="Baslik"
+                value={announcementTitle}
+                onChange={(event) => setAnnouncementTitle(event.target.value)}
+              />
+              <Textarea
+                id="announcement-content"
+                data-testid="admin-announcement-content"
+                label="Icerik"
+                rows={4}
+                value={announcementContent}
+                onChange={(event) => setAnnouncementContent(event.target.value)}
+              />
+              <Button
+                type="button"
+                data-testid="admin-announcement-publish"
+                disabled={isAnnouncementSubmitting}
+                onClick={() => void onPublishAnnouncement()}
+              >
+                {isAnnouncementSubmitting ? "Yayimlaniyor..." : "Duyuru Yayimla"}
+              </Button>
+            </div>
+            <FeedbackMessage feedback={announcementFeedback} testId="admin-announcement-feedback" />
+            <div className="announcement-list scroll-region">
+              {announcements.map((announcement) => (
+                <article key={announcement.id} className="announcement-card">
+                  <header>
+                    <h4>{announcement.title}</h4>
+                    <p>{formatDateTime(announcement.publishedAt)}</p>
+                  </header>
+                  <p>{announcement.content}</p>
+                  <div className="inline-actions">
+                    <Button
+                      type="button"
+                      disabled={announcementBusyId === announcement.id}
+                      onClick={() => {
+                        void onQuickUpdateAnnouncement(announcement);
+                      }}
+                    >
+                      Hemen Guncelle
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={announcementBusyId === announcement.id}
+                      onClick={() => {
+                        void onDeleteAnnouncement(announcement.id);
+                      }}
+                    >
+                      Sil
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </Tabs.Panel>
 
-      <section className="announcement-section">
-        <h3>Rezervasyonlar</h3>
-        <div className="announcement-list">
-          {reservations.map((reservation) => (
-            <article key={reservation.id} className="announcement-card">
-              <h4>{reservation.commonAreaName}</h4>
-              <p>
-                {reservation.residentName} | {formatDateTime(reservation.startsAt)} - {formatDateTime(reservation.endsAt)}
-              </p>
-              <p>Durum: {reservation.status}</p>
-              {reservation.status === "ACTIVE" ? (
-                <Button
-                  type="button"
-                  disabled={reservationBusyId === reservation.id}
-                  onClick={() => void onCancelReservation(reservation.id)}
-                >
-                  Iptal Et
-                </Button>
-              ) : null}
-            </article>
-          ))}
-        </div>
-        <FeedbackMessage feedback={reservationFeedback} testId="admin-reservation-feedback" />
-      </section>
+        <Tabs.Panel value="maintenance" pt="md">
+          <section className="announcement-section">
+            <h3>Bakim Talepleri</h3>
+            <div className="auth-form maintenance-filter-form">
+              <TextInput
+                id="maintenance-category"
+                label="Kategori"
+                value={maintenanceFilterCategory}
+                onChange={(event) => setMaintenanceFilterCategory(event.target.value)}
+              />
+              <NativeSelect
+                id="maintenance-status"
+                label="Durum"
+                value={maintenanceFilterStatus}
+                onChange={(event) => setMaintenanceFilterStatus((event.target.value || "") as MaintenanceStatus | "")}
+                data={[
+                  { value: "", label: "Tum durumlar" },
+                  ...maintenanceStatuses.map((status) => ({
+                    value: status,
+                    label: formatMaintenanceStatus(status)
+                  }))
+                ]}
+              />
+              <TextInput
+                id="maintenance-date-from"
+                label="Baslangic"
+                type="date"
+                value={maintenanceFilterDateFrom}
+                onChange={(event) => setMaintenanceFilterDateFrom(event.target.value)}
+              />
+              <TextInput
+                id="maintenance-date-to"
+                label="Bitis"
+                type="date"
+                value={maintenanceFilterDateTo}
+                onChange={(event) => setMaintenanceFilterDateTo(event.target.value)}
+              />
+              <Button type="button" disabled={isMaintenanceFilterSubmitting} onClick={() => void onApplyMaintenanceFilters()}>
+                {isMaintenanceFilterSubmitting ? "Filtreleniyor..." : "Filtrele"}
+              </Button>
+            </div>
+            <FeedbackMessage feedback={maintenanceFeedback} testId="admin-maintenance-feedback" />
+            <div className="announcement-list scroll-region">
+              {maintenanceRequests.map((request) => (
+                <article key={request.id} className="announcement-card" data-testid={`admin-maintenance-${request.id}`}>
+                  <h4>{request.category}</h4>
+                  <p>{request.description}</p>
+                  <p>Durum: {formatMaintenanceStatus(request.status)}</p>
+                  <div className="inline-actions">
+                    {maintenanceStatuses.map((status) => (
+                      <Button
+                        key={status}
+                        type="button"
+                        data-testid={`admin-maintenance-${request.id}-${status}`}
+                        disabled={maintenanceBusyId === request.id || request.status === status}
+                        onClick={() => {
+                          void onUpdateMaintenanceStatus(request.id, status);
+                        }}
+                      >
+                        {formatMaintenanceStatus(status)}
+                      </Button>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </Tabs.Panel>
 
-      <section className="announcement-section">
-        <h3>Park ve Ziyaretci Takibi</h3>
-        <div className="auth-form">
-          <NativeSelect
-            id="spot-select"
-            data-testid="admin-spot-select"
-            label="Park Yeri"
-            value={selectedSpotId}
-            onChange={(event) => setSelectedSpotId(event.target.value)}
-            data={[
-              { value: "", label: "Seciniz" },
-              ...parkingSpots.map((spot) => ({
-                value: spot.id,
-                label: `${spot.spotNumber} (${spot.type})`
-              }))
-            ]}
-          />
-          <NativeSelect
-            id="spot-apartment-select"
-            data-testid="admin-spot-apartment-select"
-            label="Daire Atama"
-            value={selectedSpotApartmentId}
-            onChange={(event) => setSelectedSpotApartmentId(event.target.value)}
-            data={[
-              { value: "", label: "Bosalt" },
-              ...apartments.map((apartment) => ({
-                value: apartment.id,
-                label: apartment.label
-              }))
-            ]}
-          />
-          <Button type="button" data-testid="admin-spot-save" disabled={isAssigningSpot} onClick={() => void onAssignSpot()}>
-            {isAssigningSpot ? "Kaydediliyor..." : "Atamayi Kaydet"}
-          </Button>
-        </div>
-        <FeedbackMessage feedback={parkingFeedback} testId="admin-parking-feedback" />
-        <ParkingOccupancyMap spots={parkingSpots} />
-        <p>Aktif ziyaretci: {visitorVehicles.filter((vehicle) => vehicle.exitedAt === null).length}</p>
-      </section>
+        <Tabs.Panel value="dues" pt="md">
+          <section className="announcement-section">
+            <h3>Aidat ve Odemeler</h3>
+            <div className="inline-actions">
+              <TextInput
+                type="month"
+                data-testid="admin-report-month"
+                value={reportMonth}
+                onChange={(event) => setReportMonth(event.target.value)}
+              />
+              <Button
+                type="button"
+                data-testid="admin-generate-dues"
+                disabled={isDuesSubmitting}
+                onClick={() => void onGenerateMonthlyDues()}
+              >
+                {isDuesSubmitting ? "Olusturuluyor..." : "Aylik Aidat Olustur"}
+              </Button>
+              <Anchor href={monthlyReportUrl(reportMonth)}>PDF Tahsilat Raporu</Anchor>
+            </div>
+            <FeedbackMessage feedback={duesFeedback} testId="admin-dues-feedback" />
+            <p>Aidat kaydi: {dues.length}</p>
+            <p>Odeme kaydi: {payments.length}</p>
+          </section>
+        </Tabs.Panel>
 
-      <section className="announcement-section">
-        <h3>Bildirimler</h3>
-        <NotificationList
-          notifications={notifications}
-          onMarkRead={async (notificationId) => {
-            await onMarkNotificationRead(notificationId);
-          }}
-        />
-      </section>
+        <Tabs.Panel value="reservations" pt="md">
+          <section className="announcement-section">
+            <h3>Rezervasyonlar</h3>
+            <div className="announcement-list scroll-region">
+              {reservations.map((reservation) => (
+                <article key={reservation.id} className="announcement-card">
+                  <h4>{reservation.commonAreaName}</h4>
+                  <p>
+                    {reservation.residentName} | {formatDateTime(reservation.startsAt)} - {formatDateTime(reservation.endsAt)}
+                  </p>
+                  <p>Durum: {reservation.status}</p>
+                  {reservation.status === "ACTIVE" ? (
+                    <Button
+                      type="button"
+                      disabled={reservationBusyId === reservation.id}
+                      onClick={() => void onCancelReservation(reservation.id)}
+                    >
+                      Iptal Et
+                    </Button>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+            <FeedbackMessage feedback={reservationFeedback} testId="admin-reservation-feedback" />
+          </section>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="parking" pt="md">
+          <section className="announcement-section">
+            <h3>Park ve Ziyaretci Takibi</h3>
+            <div className="auth-form">
+              <NativeSelect
+                id="spot-select"
+                data-testid="admin-spot-select"
+                label="Park Yeri"
+                value={selectedSpotId}
+                onChange={(event) => setSelectedSpotId(event.target.value)}
+                data={[
+                  { value: "", label: "Seciniz" },
+                  ...parkingSpots.map((spot) => ({
+                    value: spot.id,
+                    label: `${spot.spotNumber} (${spot.type})`
+                  }))
+                ]}
+              />
+              <NativeSelect
+                id="spot-apartment-select"
+                data-testid="admin-spot-apartment-select"
+                label="Daire Atama"
+                value={selectedSpotApartmentId}
+                onChange={(event) => setSelectedSpotApartmentId(event.target.value)}
+                data={[
+                  { value: "", label: "Bosalt" },
+                  ...apartments.map((apartment) => ({
+                    value: apartment.id,
+                    label: apartment.label
+                  }))
+                ]}
+              />
+              <Button type="button" data-testid="admin-spot-save" disabled={isAssigningSpot} onClick={() => void onAssignSpot()}>
+                {isAssigningSpot ? "Kaydediliyor..." : "Atamayi Kaydet"}
+              </Button>
+            </div>
+            <FeedbackMessage feedback={parkingFeedback} testId="admin-parking-feedback" />
+            <ParkingOccupancyMap spots={parkingSpots} />
+            <p>Aktif ziyaretci: {visitorVehicles.filter((vehicle) => vehicle.exitedAt === null).length}</p>
+          </section>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="notifications" pt="md">
+          <section className="announcement-section">
+            <h3>Bildirimler</h3>
+            <NotificationList
+              notifications={notifications}
+              onMarkRead={async (notificationId) => {
+                await onMarkNotificationRead(notificationId);
+              }}
+            />
+          </section>
+        </Tabs.Panel>
+      </Tabs>
     </article>
   );
 }
@@ -1455,233 +1493,256 @@ export function ResidentShellPage() {
         </Alert>
       ) : null}
 
-      <section className="announcement-section">
-        <h3>Profil</h3>
-        {profile ? (
-          <div className="auth-form">
-            <TextInput
-              id="resident-name"
-              label="Ad Soyad"
-              value={profileName}
-              onChange={(event) => setProfileName(event.target.value)}
-            />
-            <TextInput
-              id="resident-phone"
-              label="Telefon"
-              value={profilePhone}
-              onChange={(event) => setProfilePhone(event.target.value)}
-            />
-            <p>Daire: {profile.apartment ? `${profile.apartment.block}-${profile.apartment.number}` : "-"}</p>
-            <Button type="button" disabled={isProfileSubmitting} onClick={() => void onUpdateProfile()}>
-              {isProfileSubmitting ? "Guncelleniyor..." : "Profili Guncelle"}
-            </Button>
-            <FeedbackMessage feedback={profileFeedback} testId="resident-profile-feedback" />
-          </div>
-        ) : null}
-      </section>
+      <Tabs defaultValue="announcements" keepMounted={false} className="module-tabs">
+        <Tabs.List grow>
+          <Tabs.Tab value="announcements" data-testid="resident-tab-announcements">Duyurular</Tabs.Tab>
+          <Tabs.Tab value="profile" data-testid="resident-tab-profile">Profil</Tabs.Tab>
+          <Tabs.Tab value="maintenance" data-testid="resident-tab-maintenance">Bakim</Tabs.Tab>
+          <Tabs.Tab value="payments" data-testid="resident-tab-payments">Aidat/Odeme</Tabs.Tab>
+          <Tabs.Tab value="reservations" data-testid="resident-tab-reservations">Rezervasyon</Tabs.Tab>
+          <Tabs.Tab value="notifications" data-testid="resident-tab-notifications">Bildirimler</Tabs.Tab>
+        </Tabs.List>
 
-      <section className="announcement-section">
-        <h3>Duyurular</h3>
-        <AnnouncementList announcements={announcements} emptyMessage="Henuz duyuru yok." />
-      </section>
+        <Tabs.Panel value="announcements" pt="md">
+          <section className="announcement-section">
+            <h3>Duyurular</h3>
+            <AnnouncementList announcements={announcements} emptyMessage="Henuz duyuru yok." />
+          </section>
+        </Tabs.Panel>
 
-      <section className="announcement-section">
-        <h3>Bakim Talepleri</h3>
-        <div className="auth-form">
-          <TextInput
-            id="maintenance-create-category"
-            data-testid="resident-maintenance-category"
-            label="Kategori"
-            value={maintenanceCategory}
-            onChange={(event) => setMaintenanceCategory(event.target.value)}
-          />
-          <Textarea
-            id="maintenance-create-description"
-            data-testid="resident-maintenance-description"
-            label="Aciklama"
-            rows={4}
-            value={maintenanceDescription}
-            onChange={(event) => setMaintenanceDescription(event.target.value)}
-          />
-          <TextInput
-            id="maintenance-create-photo"
-            data-testid="resident-maintenance-photo"
-            label="Fotograf Baglantisi veya data URL"
-            value={maintenancePhotoUrl}
-            onChange={(event) => setMaintenancePhotoUrl(event.target.value)}
-          />
-          <Button
-            type="button"
-            data-testid="resident-maintenance-submit"
-            disabled={isMaintenanceSubmitting}
-            onClick={() => void onCreateMaintenanceRequest()}
-          >
-            {isMaintenanceSubmitting ? "Gonderiliyor..." : "Talep Gonder"}
-          </Button>
-        </div>
-        <FeedbackMessage feedback={maintenanceFeedback} testId="resident-maintenance-feedback" />
-        <div className="announcement-list">
-          {maintenanceRequests.map((request) => (
-            <article key={request.id} className="announcement-card" data-testid={`resident-maintenance-${request.id}`}>
-              <h4>{request.category}</h4>
-              <p>{request.description}</p>
-              <p>Durum: {formatMaintenanceStatus(request.status)}</p>
-              {request.status === "TAMAMLANDI" ? (
-                request.rating ? (
-                  <p>Puan: {request.rating}/5</p>
-                ) : (
-                  <div className="inline-actions">
-                    <NativeSelect
-                      value={String(ratingDrafts[request.id] ?? 5)}
-                      onChange={(event) =>
-                        setRatingDrafts((current) => ({
-                          ...current,
-                          [request.id]: Number(event.target.value)
-                        }))
-                      }
-                      data={[
-                        { value: "1", label: "1" },
-                        { value: "2", label: "2" },
-                        { value: "3", label: "3" },
-                        { value: "4", label: "4" },
-                        { value: "5", label: "5" }
-                      ]}
-                    />
-                    <Button
-                      type="button"
-                      disabled={maintenanceRatingBusyId === request.id}
-                      onClick={() => void onRateMaintenanceRequest(request.id)}
-                    >
-                      Puanla
-                    </Button>
-                  </div>
-                )
-              ) : null}
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="announcement-section">
-        <h3>Aidat ve Odeme</h3>
-        <div className="announcement-list">
-          {dues.map((due) => (
-            <article key={due.id} className="announcement-card" data-testid={`resident-due-${due.id}`}>
-              <h4>{due.apartmentLabel}</h4>
-              <p>Vade: {formatDateTime(due.dueDate)}</p>
-              <p>Durum: {due.status}</p>
-              <p>Kalan: {formatMoney(due.outstandingAmount)} TL</p>
-              {due.outstandingAmount > 0 ? (
-                <div className="inline-actions">
-                  {paymentMethods.map((method) => (
-                    <Button
-                      key={method}
-                      type="button"
-                      data-testid={`resident-pay-${due.id}-${method}`}
-                      disabled={paymentBusyKey !== null}
-                      onClick={() => void onPayDue(due.id, method)}
-                    >
-                      {method === "CREDIT_CARD" ? "Kart ile Ode" : "Havale ile Ode"}
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
-            </article>
-          ))}
-        </div>
-        <FeedbackMessage feedback={paymentFeedback} testId="resident-payment-feedback" />
-
-        <h4>Odeme Gecmisi</h4>
-        <div className="announcement-list">
-          {payments.map((payment) => (
-            <article key={payment.id} className="announcement-card" data-testid={`resident-payment-${payment.id}`}>
-              <p>
-                {payment.apartmentLabel} | {formatDateTime(payment.paidAt)}
-              </p>
-              <p>
-                {formatMoney(payment.amount)} TL | {payment.method}
-              </p>
-              <Anchor href={paymentReceiptUrl(payment.id)}>Makbuz PDF</Anchor>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="announcement-section">
-        <h3>Rezervasyon</h3>
-        <div className="auth-form">
-          <NativeSelect
-            id="reservation-area"
-            data-testid="resident-reservation-area"
-            label="Ortak Alan"
-            value={reservationAreaId}
-            onChange={(event) => setReservationAreaId(event.target.value)}
-            data={[
-              { value: "", label: "Seciniz" },
-              ...commonAreas.map((area) => ({
-                value: area.id,
-                label: area.name
-              }))
-            ]}
-          />
-          <TextInput
-            id="reservation-start"
-            data-testid="resident-reservation-start"
-            type="datetime-local"
-            label="Baslangic"
-            value={reservationStart}
-            onChange={(event) => setReservationStart(event.target.value)}
-          />
-          <TextInput
-            id="reservation-end"
-            data-testid="resident-reservation-end"
-            type="datetime-local"
-            label="Bitis"
-            value={reservationEnd}
-            onChange={(event) => setReservationEnd(event.target.value)}
-          />
-          <Button
-            type="button"
-            data-testid="resident-reservation-submit"
-            disabled={isReservationSubmitting}
-            onClick={() => void onCreateReservation()}
-          >
-            {isReservationSubmitting ? "Kaydediliyor..." : "Rezervasyon Yap"}
-          </Button>
-        </div>
-        <FeedbackMessage feedback={reservationFeedback} testId="resident-reservation-feedback" />
-        <div className="announcement-list">
-          {reservations.map((reservation) => (
-            <article key={reservation.id} className="announcement-card" data-testid={`resident-reservation-${reservation.id}`}>
-              <p>{reservation.commonAreaName}</p>
-              <p>
-                {formatDateTime(reservation.startsAt)} - {formatDateTime(reservation.endsAt)}
-              </p>
-              <p>Durum: {reservation.status}</p>
-              {reservation.status === "ACTIVE" ? (
-                <Button
-                  type="button"
-                  data-testid={`resident-reservation-cancel-${reservation.id}`}
-                  disabled={reservationBusyId === reservation.id}
-                  onClick={() => void onCancelReservation(reservation.id)}
-                >
-                  Iptal
+        <Tabs.Panel value="profile" pt="md">
+          <section className="announcement-section">
+            <h3>Profil</h3>
+            {profile ? (
+              <div className="auth-form">
+                <TextInput
+                  id="resident-name"
+                  label="Ad Soyad"
+                  value={profileName}
+                  onChange={(event) => setProfileName(event.target.value)}
+                />
+                <TextInput
+                  id="resident-phone"
+                  label="Telefon"
+                  value={profilePhone}
+                  onChange={(event) => setProfilePhone(event.target.value)}
+                />
+                <p>Daire: {profile.apartment ? `${profile.apartment.block}-${profile.apartment.number}` : "-"}</p>
+                <Button type="button" disabled={isProfileSubmitting} onClick={() => void onUpdateProfile()}>
+                  {isProfileSubmitting ? "Guncelleniyor..." : "Profili Guncelle"}
                 </Button>
-              ) : null}
-            </article>
-          ))}
-        </div>
-      </section>
+                <FeedbackMessage feedback={profileFeedback} testId="resident-profile-feedback" />
+              </div>
+            ) : null}
+          </section>
+        </Tabs.Panel>
 
-      <section className="announcement-section">
-        <h3>Bildirimler</h3>
-        <NotificationList
-          notifications={notifications}
-          onMarkRead={async (notificationId) => {
-            await onMarkNotificationRead(notificationId);
-          }}
-        />
-      </section>
+        <Tabs.Panel value="maintenance" pt="md">
+          <section className="announcement-section">
+            <h3>Bakim Talepleri</h3>
+            <div className="auth-form">
+              <TextInput
+                id="maintenance-create-category"
+                data-testid="resident-maintenance-category"
+                label="Kategori"
+                value={maintenanceCategory}
+                onChange={(event) => setMaintenanceCategory(event.target.value)}
+              />
+              <Textarea
+                id="maintenance-create-description"
+                data-testid="resident-maintenance-description"
+                label="Aciklama"
+                rows={4}
+                value={maintenanceDescription}
+                onChange={(event) => setMaintenanceDescription(event.target.value)}
+              />
+              <TextInput
+                id="maintenance-create-photo"
+                data-testid="resident-maintenance-photo"
+                label="Fotograf Baglantisi veya data URL"
+                value={maintenancePhotoUrl}
+                onChange={(event) => setMaintenancePhotoUrl(event.target.value)}
+              />
+              <Button
+                type="button"
+                data-testid="resident-maintenance-submit"
+                disabled={isMaintenanceSubmitting}
+                onClick={() => void onCreateMaintenanceRequest()}
+              >
+                {isMaintenanceSubmitting ? "Gonderiliyor..." : "Talep Gonder"}
+              </Button>
+            </div>
+            <FeedbackMessage feedback={maintenanceFeedback} testId="resident-maintenance-feedback" />
+            <div className="announcement-list scroll-region">
+              {maintenanceRequests.map((request) => (
+                <article key={request.id} className="announcement-card" data-testid={`resident-maintenance-${request.id}`}>
+                  <h4>{request.category}</h4>
+                  <p>{request.description}</p>
+                  <p>Durum: {formatMaintenanceStatus(request.status)}</p>
+                  {request.status === "TAMAMLANDI" ? (
+                    request.rating ? (
+                      <p>Puan: {request.rating}/5</p>
+                    ) : (
+                      <div className="inline-actions">
+                        <NativeSelect
+                          value={String(ratingDrafts[request.id] ?? 5)}
+                          onChange={(event) =>
+                            setRatingDrafts((current) => ({
+                              ...current,
+                              [request.id]: Number(event.target.value)
+                            }))
+                          }
+                          data={[
+                            { value: "1", label: "1" },
+                            { value: "2", label: "2" },
+                            { value: "3", label: "3" },
+                            { value: "4", label: "4" },
+                            { value: "5", label: "5" }
+                          ]}
+                        />
+                        <Button
+                          type="button"
+                          disabled={maintenanceRatingBusyId === request.id}
+                          onClick={() => void onRateMaintenanceRequest(request.id)}
+                        >
+                          Puanla
+                        </Button>
+                      </div>
+                    )
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </section>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="payments" pt="md">
+          <section className="announcement-section">
+            <h3>Aidat ve Odeme</h3>
+            <div className="announcement-list scroll-region">
+              {dues.map((due) => (
+                <article key={due.id} className="announcement-card" data-testid={`resident-due-${due.id}`}>
+                  <h4>{due.apartmentLabel}</h4>
+                  <p>Vade: {formatDateTime(due.dueDate)}</p>
+                  <p>Durum: {due.status}</p>
+                  <p>Kalan: {formatMoney(due.outstandingAmount)} TL</p>
+                  {due.outstandingAmount > 0 ? (
+                    <div className="inline-actions">
+                      {paymentMethods.map((method) => (
+                        <Button
+                          key={method}
+                          type="button"
+                          data-testid={`resident-pay-${due.id}-${method}`}
+                          disabled={paymentBusyKey !== null}
+                          onClick={() => void onPayDue(due.id, method)}
+                        >
+                          {method === "CREDIT_CARD" ? "Kart ile Ode" : "Havale ile Ode"}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+            <FeedbackMessage feedback={paymentFeedback} testId="resident-payment-feedback" />
+
+            <h4>Odeme Gecmisi</h4>
+            <div className="announcement-list scroll-region compact-scroll">
+              {payments.map((payment) => (
+                <article key={payment.id} className="announcement-card" data-testid={`resident-payment-${payment.id}`}>
+                  <p>
+                    {payment.apartmentLabel} | {formatDateTime(payment.paidAt)}
+                  </p>
+                  <p>
+                    {formatMoney(payment.amount)} TL | {payment.method}
+                  </p>
+                  <Anchor href={paymentReceiptUrl(payment.id)}>Makbuz PDF</Anchor>
+                </article>
+              ))}
+            </div>
+          </section>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="reservations" pt="md">
+          <section className="announcement-section">
+            <h3>Rezervasyon</h3>
+            <div className="auth-form">
+              <NativeSelect
+                id="reservation-area"
+                data-testid="resident-reservation-area"
+                label="Ortak Alan"
+                value={reservationAreaId}
+                onChange={(event) => setReservationAreaId(event.target.value)}
+                data={[
+                  { value: "", label: "Seciniz" },
+                  ...commonAreas.map((area) => ({
+                    value: area.id,
+                    label: area.name
+                  }))
+                ]}
+              />
+              <TextInput
+                id="reservation-start"
+                data-testid="resident-reservation-start"
+                type="datetime-local"
+                label="Baslangic"
+                value={reservationStart}
+                onChange={(event) => setReservationStart(event.target.value)}
+              />
+              <TextInput
+                id="reservation-end"
+                data-testid="resident-reservation-end"
+                type="datetime-local"
+                label="Bitis"
+                value={reservationEnd}
+                onChange={(event) => setReservationEnd(event.target.value)}
+              />
+              <Button
+                type="button"
+                data-testid="resident-reservation-submit"
+                disabled={isReservationSubmitting}
+                onClick={() => void onCreateReservation()}
+              >
+                {isReservationSubmitting ? "Kaydediliyor..." : "Rezervasyon Yap"}
+              </Button>
+            </div>
+            <FeedbackMessage feedback={reservationFeedback} testId="resident-reservation-feedback" />
+            <div className="announcement-list scroll-region">
+              {reservations.map((reservation) => (
+                <article key={reservation.id} className="announcement-card" data-testid={`resident-reservation-${reservation.id}`}>
+                  <p>{reservation.commonAreaName}</p>
+                  <p>
+                    {formatDateTime(reservation.startsAt)} - {formatDateTime(reservation.endsAt)}
+                  </p>
+                  <p>Durum: {reservation.status}</p>
+                  {reservation.status === "ACTIVE" ? (
+                    <Button
+                      type="button"
+                      data-testid={`resident-reservation-cancel-${reservation.id}`}
+                      disabled={reservationBusyId === reservation.id}
+                      onClick={() => void onCancelReservation(reservation.id)}
+                    >
+                      Iptal
+                    </Button>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </section>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="notifications" pt="md">
+          <section className="announcement-section">
+            <h3>Bildirimler</h3>
+            <NotificationList
+              notifications={notifications}
+              onMarkRead={async (notificationId) => {
+                await onMarkNotificationRead(notificationId);
+              }}
+            />
+          </section>
+        </Tabs.Panel>
+      </Tabs>
     </article>
   );
 }
@@ -1809,91 +1870,106 @@ export function SecurityShellPage() {
         </Alert>
       ) : null}
 
-      <section className="announcement-section">
-        <h3>Ziyaretci Arac Girisi</h3>
-        <div className="auth-form">
-          <TextInput
-            id="visitor-plate"
-            data-testid="security-visitor-plate"
-            label="Plaka"
-            value={plate}
-            onChange={(event) => setPlate(event.target.value)}
-          />
-          <NativeSelect
-            id="visitor-apartment"
-            data-testid="security-visitor-apartment"
-            label="Daire"
-            value={apartmentId}
-            onChange={(event) => setApartmentId(event.target.value)}
-            data={[
-              { value: "", label: "Seciniz" },
-              ...apartments.map((apartment) => ({
-                value: apartment.id,
-                label: apartment.label
-              }))
-            ]}
-          />
-          <NativeSelect
-            id="visitor-spot"
-            data-testid="security-visitor-spot"
-            label="Ziyaretci Park Yeri"
-            value={parkingSpotId}
-            onChange={(event) => setParkingSpotId(event.target.value)}
-            data={[
-              { value: "", label: "Seciniz" },
-              ...visitorSpots.map((spot) => ({
-                value: spot.id,
-                label: spot.spotNumber
-              }))
-            ]}
-          />
-          <Button
-            type="button"
-            data-testid="security-visitor-submit"
-            disabled={isVisitorSubmitting}
-            onClick={() => void onCreateVisitor()}
-          >
-            {isVisitorSubmitting ? "Kaydediliyor..." : "Giris Kaydet"}
-          </Button>
-        </div>
-        <FeedbackMessage feedback={visitorFeedback} testId="security-visitor-feedback" />
-      </section>
+      <Tabs defaultValue="entry" keepMounted={false} className="module-tabs">
+        <Tabs.List grow>
+          <Tabs.Tab value="entry" data-testid="security-tab-entry">Arac Girisi</Tabs.Tab>
+          <Tabs.Tab value="active" data-testid="security-tab-active">Aktif Ziyaretciler</Tabs.Tab>
+          <Tabs.Tab value="notifications" data-testid="security-tab-notifications">Bildirimler</Tabs.Tab>
+        </Tabs.List>
 
-      <section className="announcement-section">
-        <h3>Aktif Ziyaretciler</h3>
-        <div className="announcement-list">
-          {visitorVehicles.map((vehicle) => (
-            <article key={vehicle.id} className="announcement-card" data-testid={`security-vehicle-${vehicle.id}`}>
-              <p>
-                {vehicle.plate} | {vehicle.apartmentLabel} | {vehicle.parkingSpotNumber}
-              </p>
-              <p>Giris: {formatDateTime(vehicle.enteredAt)}</p>
-              <p>Durum: {vehicle.exitedAt ? "Cikti" : "Iceride"}</p>
-              {vehicle.isOverdue ? <p className="error">4 saat limiti asildi.</p> : null}
-              {!vehicle.exitedAt ? (
-                <Button
-                  type="button"
-                  data-testid={`security-vehicle-exit-${vehicle.id}`}
-                  disabled={visitorExitBusyId === vehicle.id}
-                  onClick={() => void onExitVisitor(vehicle.id)}
-                >
-                  Cikis Kaydet
-                </Button>
-              ) : null}
-            </article>
-          ))}
-        </div>
-      </section>
+        <Tabs.Panel value="entry" pt="md">
+          <section className="announcement-section">
+            <h3>Ziyaretci Arac Girisi</h3>
+            <div className="auth-form">
+              <TextInput
+                id="visitor-plate"
+                data-testid="security-visitor-plate"
+                label="Plaka"
+                value={plate}
+                onChange={(event) => setPlate(event.target.value)}
+              />
+              <NativeSelect
+                id="visitor-apartment"
+                data-testid="security-visitor-apartment"
+                label="Daire"
+                value={apartmentId}
+                onChange={(event) => setApartmentId(event.target.value)}
+                data={[
+                  { value: "", label: "Seciniz" },
+                  ...apartments.map((apartment) => ({
+                    value: apartment.id,
+                    label: apartment.label
+                  }))
+                ]}
+              />
+              <NativeSelect
+                id="visitor-spot"
+                data-testid="security-visitor-spot"
+                label="Ziyaretci Park Yeri"
+                value={parkingSpotId}
+                onChange={(event) => setParkingSpotId(event.target.value)}
+                data={[
+                  { value: "", label: "Seciniz" },
+                  ...visitorSpots.map((spot) => ({
+                    value: spot.id,
+                    label: spot.spotNumber
+                  }))
+                ]}
+              />
+              <Button
+                type="button"
+                data-testid="security-visitor-submit"
+                disabled={isVisitorSubmitting}
+                onClick={() => void onCreateVisitor()}
+              >
+                {isVisitorSubmitting ? "Kaydediliyor..." : "Giris Kaydet"}
+              </Button>
+            </div>
+            <FeedbackMessage feedback={visitorFeedback} testId="security-visitor-feedback" />
+          </section>
+        </Tabs.Panel>
 
-      <section className="announcement-section">
-        <h3>Bildirimler</h3>
-        <NotificationList
-          notifications={notifications}
-          onMarkRead={async (notificationId) => {
-            await onMarkNotificationRead(notificationId);
-          }}
-        />
-      </section>
+        <Tabs.Panel value="active" pt="md">
+          <section className="announcement-section">
+            <h3>Aktif Ziyaretciler</h3>
+            <div className="announcement-list scroll-region">
+              {visitorVehicles.map((vehicle) => (
+                <article key={vehicle.id} className="announcement-card" data-testid={`security-vehicle-${vehicle.id}`}>
+                  <p>
+                    {vehicle.plate} | {vehicle.apartmentLabel} | {vehicle.parkingSpotNumber}
+                  </p>
+                  <p>Giris: {formatDateTime(vehicle.enteredAt)}</p>
+                  <p>Durum: {vehicle.exitedAt ? "Cikti" : "Iceride"}</p>
+                  {vehicle.isOverdue ? <p className="error">4 saat limiti asildi.</p> : null}
+                  {!vehicle.exitedAt ? (
+                    <Button
+                      type="button"
+                      data-testid={`security-vehicle-exit-${vehicle.id}`}
+                      disabled={visitorExitBusyId === vehicle.id}
+                      onClick={() => void onExitVisitor(vehicle.id)}
+                    >
+                      Cikis Kaydet
+                    </Button>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+            <FeedbackMessage feedback={visitorFeedback} testId="security-visitor-feedback" />
+          </section>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="notifications" pt="md">
+          <section className="announcement-section">
+            <h3>Bildirimler</h3>
+            <NotificationList
+              notifications={notifications}
+              onMarkRead={async (notificationId) => {
+                await onMarkNotificationRead(notificationId);
+              }}
+            />
+          </section>
+        </Tabs.Panel>
+      </Tabs>
     </article>
   );
 }
